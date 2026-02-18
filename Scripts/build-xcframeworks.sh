@@ -194,10 +194,22 @@ create_framework_from_build() {
     mkdir -p "$FRAMEWORK_DIR/Headers"
     
     # Copy Swift module
-    if [ -d "${DERIVED_DATA}/${MODULE_NAME}.swiftmodule" ]; then
+    # Handle case where PRODUCT_MODULE_NAME might be different from MODULE_NAME
+    ACTUAL_MODULE_NAME="${MODULE_NAME}"
+    if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterHTTP" ]; then
+        ACTUAL_MODULE_NAME="OpenTelemetryProtocolExporterHttp"
+    fi
+    
+    if [ -d "${DERIVED_DATA}/${ACTUAL_MODULE_NAME}.swiftmodule" ]; then
+        cp -R "${DERIVED_DATA}/${ACTUAL_MODULE_NAME}.swiftmodule" "$FRAMEWORK_DIR/Modules/"
+        # Rename to match framework name if different
+        if [ "${ACTUAL_MODULE_NAME}" != "${MODULE_NAME}" ]; then
+            mv "$FRAMEWORK_DIR/Modules/${ACTUAL_MODULE_NAME}.swiftmodule" "$FRAMEWORK_DIR/Modules/${MODULE_NAME}.swiftmodule"
+        fi
+    elif [ -d "${DERIVED_DATA}/${MODULE_NAME}.swiftmodule" ]; then
         cp -R "${DERIVED_DATA}/${MODULE_NAME}.swiftmodule" "$FRAMEWORK_DIR/Modules/"
     else
-        echo "      ✗ Swift module not found"
+        echo "      ✗ Swift module not found (tried: ${ACTUAL_MODULE_NAME}.swiftmodule and ${MODULE_NAME}.swiftmodule)"
         return 1
     fi
     
@@ -297,6 +309,11 @@ build_module_xcframework() {
     
     # Build for iOS device
     echo "  Building for iOS (device)..."
+    # Set PRODUCT_MODULE_NAME to lowercase for OpenTelemetryProtocolExporterHTTP
+    MODULE_NAME_ARG=""
+    if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterHTTP" ]; then
+        MODULE_NAME_ARG="PRODUCT_MODULE_NAME=OpenTelemetryProtocolExporterHttp"
+    fi
     xcodebuild archive \
         ${WORKSPACE_ARG} \
         -scheme "${MODULE_NAME}" \
@@ -307,6 +324,7 @@ build_module_xcframework() {
         ONLY_ACTIVE_ARCH=NO \
         CODE_SIGN_IDENTITY="" \
         CODE_SIGNING_REQUIRED=NO \
+        ${MODULE_NAME_ARG} \
         2>&1 | grep -E "(error|warning:|Building|Archive|Creating)" || true
     
     # Create framework manually from build artifacts
@@ -323,6 +341,11 @@ build_module_xcframework() {
     echo "  Building for iOS Simulator..."
     # Ensure we're still in source directory
     cd "${SOURCE_DIR}"
+    # Set PRODUCT_MODULE_NAME to lowercase for OpenTelemetryProtocolExporterHTTP
+    MODULE_NAME_ARG=""
+    if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterHTTP" ]; then
+        MODULE_NAME_ARG="PRODUCT_MODULE_NAME=OpenTelemetryProtocolExporterHttp"
+    fi
     xcodebuild archive \
         ${WORKSPACE_ARG} \
         -scheme "${MODULE_NAME}" \
@@ -333,6 +356,7 @@ build_module_xcframework() {
         ONLY_ACTIVE_ARCH=NO \
         CODE_SIGN_IDENTITY="" \
         CODE_SIGNING_REQUIRED=NO \
+        ${MODULE_NAME_ARG} \
         2>&1 | grep -E "(error|warning:|Building|Archive|Creating)" || true
     
     # Create framework manually from build artifacts

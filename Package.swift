@@ -19,7 +19,7 @@ let openTelemetrySdkXCFramework = Target.binaryTarget(
 )
 
 let openTelemetryProtocolExporterHttpXCFramework = Target.binaryTarget(
-    name: "OpenTelemetryProtocolExporterHTTP",
+    name: "OpenTelemetryProtocolExporterHttp",
     url: "https://github.com/michaelversus/opentelemetry-swift-spm/releases/download/1.15.0/OpenTelemetryProtocolExporterHTTP.xcframework.zip",
     checksum: "97355327d48f1ff56a0daf17c66e08194875a0c0eb0ff02b71eea72390ae58d7"
 )
@@ -35,7 +35,9 @@ let package = Package(
     products: [
         .library(name: "OpenTelemetryApi", targets: ["OpenTelemetryApi", "_OpenTelemetrySwiftStub"]),
         .library(name: "OpenTelemetrySdk", targets: ["OpenTelemetrySdk", "_OpenTelemetrySwiftStub"]),
-        .library(name: "OpenTelemetryProtocolExporterHTTP", targets: ["OpenTelemetryProtocolExporterHTTP", "_OpenTelemetrySwiftStub"]),
+        .library(name: "OpenTelemetryProtocolExporterHTTP", targets: ["OpenTelemetryProtocolExporterHttp", "_OpenTelemetrySwiftStub"]),
+        // Alias for compatibility with packages expecting lowercase 'http'
+        .library(name: "OpenTelemetryProtocolExporterHttp", targets: ["OpenTelemetryProtocolExporterHttp", "_OpenTelemetrySwiftStub"]),
     ],
     targets: [
         // Binary targets
