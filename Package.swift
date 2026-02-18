@@ -3,7 +3,7 @@
 import PackageDescription
 
 /// Precompiled XCFrameworks for OpenTelemetry Swift version 1.15.0
-/// Contains only the core modules: OpenTelemetryApi, OpenTelemetrySdk, and OpenTelemetryProtocolExporterHTTP
+/// Contains only the core modules: OpenTelemetryApi, OpenTelemetrySdk, and OpenTelemetryProtocolExporterHttp
 
 // Core modules
 let openTelemetryApiXCFramework = Target.binaryTarget(
@@ -35,8 +35,6 @@ let package = Package(
     products: [
         .library(name: "OpenTelemetryApi", targets: ["OpenTelemetryApi", "_OpenTelemetrySwiftStub"]),
         .library(name: "OpenTelemetrySdk", targets: ["OpenTelemetrySdk", "_OpenTelemetrySwiftStub"]),
-        .library(name: "OpenTelemetryProtocolExporterHTTP", targets: ["OpenTelemetryProtocolExporterHttp", "_OpenTelemetrySwiftStub"]),
-        // Alias for compatibility with packages expecting lowercase 'http'
         .library(name: "OpenTelemetryProtocolExporterHttp", targets: ["OpenTelemetryProtocolExporterHttp", "_OpenTelemetrySwiftStub"]),
     ],
     targets: [
