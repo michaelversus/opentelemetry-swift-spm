@@ -54,6 +54,9 @@ let package = Package(
         .library(name: "OpenTelemetryProtocolExporterCommon", targets: ["OpenTelemetryProtocolExporterCommon", "_OpenTelemetrySwiftStub"]),
         .library(name: "OpenTelemetryProtocolExporterHttp", targets: ["OpenTelemetryProtocolExporterHttpWrapper", "_OpenTelemetrySwiftStub"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.33.3"),
+    ],
     targets: [
         // Binary targets
         openTelemetryApiXCFramework,
@@ -63,14 +66,15 @@ let package = Package(
         openTelemetryProtocolExporterHttpXCFramework,
         
         // Wrapper target for OpenTelemetryProtocolExporterHttp that declares dependencies
-        // This ensures DataCompression and OpenTelemetryProtocolExporterCommon are automatically linked
+        // This ensures DataCompression, OpenTelemetryProtocolExporterCommon, and SwiftProtobuf are automatically linked
         .target(
             name: "OpenTelemetryProtocolExporterHttpWrapper",
             dependencies: [
                 "OpenTelemetryProtocolExporterHttp",
                 "DataCompression",
                 "OpenTelemetryProtocolExporterCommon",
-                "OpenTelemetrySdk"
+                "OpenTelemetrySdk",
+                .product(name: "SwiftProtobuf", package: "swift-protobuf")
             ],
             path: "Sources/OpenTelemetryProtocolExporterHttpWrapper"
         ),
