@@ -313,6 +313,11 @@ build_module_xcframework() {
     
     # Build for iOS device
     echo "  Building for iOS (device)..."
+    # Map module name to scheme name (scheme names may differ from module names)
+    SCHEME_NAME="${MODULE_NAME}"
+    if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterCommon" ]; then
+        SCHEME_NAME="OpenTelemetryProtocolExporter"
+    fi
     # Set PRODUCT_MODULE_NAME to lowercase for OpenTelemetryProtocolExporterHTTP
     MODULE_NAME_ARG=""
     if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterHTTP" ]; then
@@ -320,7 +325,7 @@ build_module_xcframework() {
     fi
     xcodebuild archive \
         ${WORKSPACE_ARG} \
-        -scheme "${MODULE_NAME}" \
+        -scheme "${SCHEME_NAME}" \
         -destination "generic/platform=iOS" \
         -archivePath "${MODULE_BUILD_DIR}/ios-device.xcarchive" \
         SKIP_INSTALL=NO \
@@ -328,6 +333,8 @@ build_module_xcframework() {
         ONLY_ACTIVE_ARCH=NO \
         CODE_SIGN_IDENTITY="" \
         CODE_SIGNING_REQUIRED=NO \
+        SWIFT_STRICT_CONCURRENCY=no \
+        SWIFT_VERSION=5 \
         ${MODULE_NAME_ARG} \
         2>&1 | grep -E "(error|warning:|Building|Archive|Creating)" || true
     
@@ -350,6 +357,11 @@ build_module_xcframework() {
     echo "  Building for iOS Simulator..."
     # Ensure we're still in source directory
     cd "${SOURCE_DIR}"
+    # Map module name to scheme name (scheme names may differ from module names)
+    SCHEME_NAME="${MODULE_NAME}"
+    if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterCommon" ]; then
+        SCHEME_NAME="OpenTelemetryProtocolExporter"
+    fi
     # Set PRODUCT_MODULE_NAME to lowercase for OpenTelemetryProtocolExporterHTTP
     MODULE_NAME_ARG=""
     if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterHTTP" ]; then
@@ -357,7 +369,7 @@ build_module_xcframework() {
     fi
     xcodebuild archive \
         ${WORKSPACE_ARG} \
-        -scheme "${MODULE_NAME}" \
+        -scheme "${SCHEME_NAME}" \
         -destination "generic/platform=iOS Simulator" \
         -archivePath "$(cd "${MODULE_BUILD_DIR}" && pwd)/ios-simulator.xcarchive" \
         SKIP_INSTALL=NO \
@@ -365,6 +377,8 @@ build_module_xcframework() {
         ONLY_ACTIVE_ARCH=NO \
         CODE_SIGN_IDENTITY="" \
         CODE_SIGNING_REQUIRED=NO \
+        SWIFT_STRICT_CONCURRENCY=no \
+        SWIFT_VERSION=5 \
         ${MODULE_NAME_ARG} \
         2>&1 | grep -E "(error|warning:|Building|Archive|Creating)" || true
     

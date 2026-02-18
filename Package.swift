@@ -1,9 +1,9 @@
-// swift-tools-version:6.0
+// swift-tools-version:5.9
 
 import PackageDescription
 
 /// Precompiled XCFrameworks for OpenTelemetry Swift version 1.15.4
-/// Contains only the core modules: OpenTelemetryApi, OpenTelemetrySdk, and OpenTelemetryProtocolExporterHttp
+/// Contains core modules and dependencies: OpenTelemetryApi, OpenTelemetrySdk, OpenTelemetryProtocolExporterHttp, DataCompression, and OpenTelemetryProtocolExporterCommon
 /// All naming is consistent: binary target names match zip filenames, XCFramework directory names, and framework directory/binary names
 
 // Core modules
@@ -17,6 +17,19 @@ let openTelemetrySdkXCFramework = Target.binaryTarget(
     name: "OpenTelemetrySdk",
     url: "https://github.com/michaelversus/opentelemetry-swift-spm/releases/download/1.15.4/OpenTelemetrySdk.xcframework.zip",
     checksum: "7eb41880ec343a5e8595efe6da5b788f8f6d4e1d4c55571a0081124f57fc8a8e"
+)
+
+// Dependencies
+let dataCompressionXCFramework = Target.binaryTarget(
+    name: "DataCompression",
+    url: "https://github.com/michaelversus/opentelemetry-swift-spm/releases/download/1.15.4/DataCompression.xcframework.zip",
+    checksum: "f3fd74025c853ff005ae361495f33434d4925ea7403e89f137a21be46ea506b2"
+)
+
+let openTelemetryProtocolExporterCommonXCFramework = Target.binaryTarget(
+    name: "OpenTelemetryProtocolExporterCommon",
+    url: "https://github.com/michaelversus/opentelemetry-swift-spm/releases/download/1.15.4/OpenTelemetryProtocolExporterCommon.xcframework.zip",
+    checksum: "c7dfd515d8a454fd0bd3e94c0e832bf9336083c97a5b8f381d58595b9e642a7f"
 )
 
 let openTelemetryProtocolExporterHttpXCFramework = Target.binaryTarget(
@@ -36,12 +49,16 @@ let package = Package(
     products: [
         .library(name: "OpenTelemetryApi", targets: ["OpenTelemetryApi", "_OpenTelemetrySwiftStub"]),
         .library(name: "OpenTelemetrySdk", targets: ["OpenTelemetrySdk", "_OpenTelemetrySwiftStub"]),
+        .library(name: "DataCompression", targets: ["DataCompression", "_OpenTelemetrySwiftStub"]),
+        .library(name: "OpenTelemetryProtocolExporterCommon", targets: ["OpenTelemetryProtocolExporterCommon", "_OpenTelemetrySwiftStub"]),
         .library(name: "OpenTelemetryProtocolExporterHttp", targets: ["OpenTelemetryProtocolExporterHttp", "_OpenTelemetrySwiftStub"]),
     ],
     targets: [
         // Binary targets
         openTelemetryApiXCFramework,
         openTelemetrySdkXCFramework,
+        dataCompressionXCFramework,
+        openTelemetryProtocolExporterCommonXCFramework,
         openTelemetryProtocolExporterHttpXCFramework,
         
         // Without at least one regular (non-binary) target, this package doesn't show up
