@@ -55,7 +55,7 @@ let package = Package(
         .library(name: "OpenTelemetryProtocolExporterHttp", targets: ["OpenTelemetryProtocolExporterHttpWrapper", "_OpenTelemetrySwiftStub"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.33.3"),
+        .package(url: "https://github.com/apple/swift-protobuf.git", exact: "1.20.2"),
     ],
     targets: [
         // Binary targets
