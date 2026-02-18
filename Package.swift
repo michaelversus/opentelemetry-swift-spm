@@ -21,7 +21,7 @@ let openTelemetrySdkXCFramework = Target.binaryTarget(
 
 let openTelemetryProtocolExporterHttpXCFramework = Target.binaryTarget(
     name: "OpenTelemetryProtocolExporterHttp",
-    url: "https://github.com/michaelversus/opentelemetry-swift-spm/releases/download/1.15.1/OpenTelemetryProtocolExporterHTTP.xcframework.zip",
+    url: "https://github.com/michaelversus/opentelemetry-swift-spm/releases/download/1.15.1/OpenTelemetryProtocolExporterHttp.xcframework.zip",
     checksum: "bd8de32b8a55f25104bcd978791e1ab0851bf270d5fce93e900c45e48198413f"
 )
 
