@@ -2,9 +2,10 @@
 
 import PackageDescription
 
-/// Precompiled XCFrameworks for OpenTelemetry Swift version 1.15.5
+/// Precompiled XCFrameworks for OpenTelemetry Swift version 1.15.6
 /// Contains core modules and dependencies: OpenTelemetryApi, OpenTelemetrySdk, OpenTelemetryProtocolExporterHttp, DataCompression, and OpenTelemetryProtocolExporterCommon
 /// All naming is consistent: binary target names match zip filenames, XCFramework directory names, and framework directory/binary names
+/// OpenTelemetryProtocolExporterHttp uses a wrapper target to automatically link its dependencies
 
 // Core modules
 let openTelemetryApiXCFramework = Target.binaryTarget(
