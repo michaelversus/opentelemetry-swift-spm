@@ -187,8 +187,15 @@ create_framework_from_build() {
         return 1
     fi
     
-    # Create framework directory (use module name, not platform-specific name)
-    FRAMEWORK_DIR="${OUTPUT_DIR}/${MODULE_NAME}.framework"
+    # Map module name to framework name (must match binary target name in Package.swift)
+    # For OpenTelemetryProtocolExporterHTTP, use lowercase "Http" to match Package.swift target name
+    FRAMEWORK_NAME="${MODULE_NAME}"
+    if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterHTTP" ]; then
+        FRAMEWORK_NAME="OpenTelemetryProtocolExporterHttp"
+    fi
+    
+    # Create framework directory (use mapped framework name, not module name)
+    FRAMEWORK_DIR="${OUTPUT_DIR}/${FRAMEWORK_NAME}.framework"
     rm -rf "$FRAMEWORK_DIR"
     mkdir -p "$FRAMEWORK_DIR/Modules"
     mkdir -p "$FRAMEWORK_DIR/Headers"
@@ -210,8 +217,8 @@ create_framework_from_build() {
         return 1
     fi
     
-    # Create static library from object files
-    OUTPUT="${FRAMEWORK_DIR}/${MODULE_NAME}"
+    # Create static library from object files (use framework name, not module name)
+    OUTPUT="${FRAMEWORK_DIR}/${FRAMEWORK_NAME}"
     rm -f "$OUTPUT"
     
     OBJECT_FILES=$(find "${INTERMEDIATE_BUILD}/Objects-normal" -name "*.o" -type f 2>/dev/null)
@@ -234,7 +241,7 @@ create_framework_from_build() {
     # Index the archive
     ranlib "$OUTPUT"
     
-    # Create Info.plist
+    # Create Info.plist (use framework name, not module name)
     cat > "$FRAMEWORK_DIR/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -243,13 +250,13 @@ create_framework_from_build() {
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>${MODULE_NAME}</string>
+    <string>${FRAMEWORK_NAME}</string>
     <key>CFBundleIdentifier</key>
-    <string>com.opentelemetry.${MODULE_NAME}</string>
+    <string>com.opentelemetry.${FRAMEWORK_NAME}</string>
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>${MODULE_NAME}</string>
+    <string>${FRAMEWORK_NAME}</string>
     <key>CFBundlePackageType</key>
     <string>FMWK</string>
     <key>CFBundleShortVersionString</key>
@@ -327,8 +334,13 @@ build_module_xcframework() {
     # Create framework manually from build artifacts
     PLATFORM_FRAMEWORK_DIR="${TEMP_FRAMEWORKS_DIR}/ios-device"
     mkdir -p "$PLATFORM_FRAMEWORK_DIR"
+    # Determine framework name (lowercase for OpenTelemetryProtocolExporterHTTP)
+    FRAMEWORK_NAME="${MODULE_NAME}"
+    if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterHTTP" ]; then
+        FRAMEWORK_NAME="OpenTelemetryProtocolExporterHttp"
+    fi
     if create_framework_from_build "${MODULE_NAME}" "ios-device" "${MODULE_BUILD_DIR}/ios-device.xcarchive" "$PLATFORM_FRAMEWORK_DIR"; then
-        FRAMEWORK_PATHS+=("-framework" "${PLATFORM_FRAMEWORK_DIR}/${MODULE_NAME}.framework")
+        FRAMEWORK_PATHS+=("-framework" "${PLATFORM_FRAMEWORK_DIR}/${FRAMEWORK_NAME}.framework")
         echo "    ✓ iOS device"
     else
         echo "    ✗ iOS device framework creation failed"
@@ -359,8 +371,13 @@ build_module_xcframework() {
     # Create framework manually from build artifacts
     PLATFORM_FRAMEWORK_DIR="${TEMP_FRAMEWORKS_DIR}/ios-simulator"
     mkdir -p "$PLATFORM_FRAMEWORK_DIR"
+    # Determine framework name (lowercase for OpenTelemetryProtocolExporterHTTP)
+    FRAMEWORK_NAME="${MODULE_NAME}"
+    if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterHTTP" ]; then
+        FRAMEWORK_NAME="OpenTelemetryProtocolExporterHttp"
+    fi
     if create_framework_from_build "${MODULE_NAME}" "ios-simulator" "${MODULE_BUILD_DIR}/ios-simulator.xcarchive" "$PLATFORM_FRAMEWORK_DIR"; then
-        FRAMEWORK_PATHS+=("-framework" "${PLATFORM_FRAMEWORK_DIR}/${MODULE_NAME}.framework")
+        FRAMEWORK_PATHS+=("-framework" "${PLATFORM_FRAMEWORK_DIR}/${FRAMEWORK_NAME}.framework")
         echo "    ✓ iOS Simulator"
     else
         echo "    ✗ iOS Simulator framework creation failed"
