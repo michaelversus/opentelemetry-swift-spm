@@ -201,11 +201,8 @@ create_framework_from_build() {
     fi
     
     if [ -d "${DERIVED_DATA}/${ACTUAL_MODULE_NAME}.swiftmodule" ]; then
+        # Keep the swiftmodule directory name matching the actual module name (not framework name)
         cp -R "${DERIVED_DATA}/${ACTUAL_MODULE_NAME}.swiftmodule" "$FRAMEWORK_DIR/Modules/"
-        # Rename to match framework name if different
-        if [ "${ACTUAL_MODULE_NAME}" != "${MODULE_NAME}" ]; then
-            mv "$FRAMEWORK_DIR/Modules/${ACTUAL_MODULE_NAME}.swiftmodule" "$FRAMEWORK_DIR/Modules/${MODULE_NAME}.swiftmodule"
-        fi
     elif [ -d "${DERIVED_DATA}/${MODULE_NAME}.swiftmodule" ]; then
         cp -R "${DERIVED_DATA}/${MODULE_NAME}.swiftmodule" "$FRAMEWORK_DIR/Modules/"
     else
