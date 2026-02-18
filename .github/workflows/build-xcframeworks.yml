@@ -1,0 +1,101 @@
+name: Build XCFrameworks
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'OpenTelemetry Swift version to build'
+        required: true
+        default: '1.15.0'
+        type: string
+      dry_run:
+        description: 'Dry run (build but do not upload)'
+        required: false
+        default: 'false'
+        type: boolean
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build XCFrameworks
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      
+      - name: Install dependencies
+        run: |
+          brew install jq gh
+      
+      - name: Authenticate GitHub CLI
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            # Extract version from tag (e.g., v1.15.0 -> 1.15.0)
+            VERSION=$(echo "${{ github.ref }}" | sed 's/refs\/tags\/v//')
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Build XCFrameworks
+        run: |
+          chmod +x Scripts/*.sh
+          ./Scripts/build-xcframeworks.sh ${{ steps.version.outputs.version }}
+      
+      - name: Calculate checksums
+        run: |
+          ./Scripts/calculate-checksums.sh
+      
+      - name: Display checksums
+        run: |
+          echo "Generated checksums:"
+          cat build/checksums.txt
+      
+      - name: Upload XCFrameworks to release
+        if: github.event.inputs.dry_run != 'true' && github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run == 'false'
+        run: |
+          REPO="${GITHUB_REPOSITORY}"
+          ./Scripts/upload-release.sh ${{ steps.version.outputs.version }} build/xcframeworks "${REPO}" false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Update Package.swift
+        if: github.event.inputs.dry_run != 'true' && github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run == 'false'
+        run: |
+          ./Scripts/update-package.sh
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcframeworks-${{ steps.version.outputs.version }}
+          path: |
+            build/xcframeworks/*.zip
+            build/checksums.json
+            build/checksums.txt
+          retention-days: 30
+      
+      - name: Commit Package.swift updates
+        if: github.event.inputs.dry_run != 'true' && github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run == 'false'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Package.swift
+          git diff --staged --quiet || git commit -m "Update checksums for version ${{ steps.version.outputs.version }}"
+          git push || echo "No changes to commit"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
