@@ -51,7 +51,7 @@ let package = Package(
         .library(name: "OpenTelemetrySdk", targets: ["OpenTelemetrySdk", "_OpenTelemetrySwiftStub"]),
         .library(name: "DataCompression", targets: ["DataCompression", "_OpenTelemetrySwiftStub"]),
         .library(name: "OpenTelemetryProtocolExporterCommon", targets: ["OpenTelemetryProtocolExporterCommon", "_OpenTelemetrySwiftStub"]),
-        .library(name: "OpenTelemetryProtocolExporterHttp", targets: ["OpenTelemetryProtocolExporterHttp", "_OpenTelemetrySwiftStub"]),
+        .library(name: "OpenTelemetryProtocolExporterHttp", targets: ["OpenTelemetryProtocolExporterHttpWrapper", "_OpenTelemetrySwiftStub"]),
     ],
     targets: [
         // Binary targets
@@ -60,6 +60,19 @@ let package = Package(
         dataCompressionXCFramework,
         openTelemetryProtocolExporterCommonXCFramework,
         openTelemetryProtocolExporterHttpXCFramework,
+        
+        // Wrapper target for OpenTelemetryProtocolExporterHttp that declares dependencies
+        // This ensures DataCompression and OpenTelemetryProtocolExporterCommon are automatically linked
+        .target(
+            name: "OpenTelemetryProtocolExporterHttpWrapper",
+            dependencies: [
+                "OpenTelemetryProtocolExporterHttp",
+                "DataCompression",
+                "OpenTelemetryProtocolExporterCommon",
+                "OpenTelemetrySdk"
+            ],
+            path: "Sources/OpenTelemetryProtocolExporterHttpWrapper"
+        ),
         
         // Without at least one regular (non-binary) target, this package doesn't show up
         // in Xcode under "Frameworks, Libraries, and Embedded Content". That prevents

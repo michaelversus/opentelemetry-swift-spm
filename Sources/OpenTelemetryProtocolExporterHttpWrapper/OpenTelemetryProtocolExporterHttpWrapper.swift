@@ -1,0 +1,8 @@
+// Wrapper target to ensure dependencies are automatically linked
+// This target re-exports OpenTelemetryProtocolExporterHttp and declares its dependencies
+// so that SPM automatically includes DataCompression and OpenTelemetryProtocolExporterCommon
+
+@_exported import OpenTelemetryProtocolExporterHttp
+@_exported import DataCompression
+@_exported import OpenTelemetryProtocolExporterCommon
+@_exported import OpenTelemetrySdk
