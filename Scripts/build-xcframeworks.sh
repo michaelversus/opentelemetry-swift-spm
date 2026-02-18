@@ -374,7 +374,13 @@ build_module_xcframework() {
         return 0
     fi
     
-    XCFRAMEWORK_OUTPUT="${XCFRAMEWORKS_DIR}/${MODULE_NAME}.xcframework"
+    # Map module name to XCFramework directory name (must match binary target name in Package.swift)
+    # For OpenTelemetryProtocolExporterHTTP, use lowercase "Http" to match Package.swift target name
+    XCFRAMEWORK_NAME="${MODULE_NAME}"
+    if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterHTTP" ]; then
+        XCFRAMEWORK_NAME="OpenTelemetryProtocolExporterHttp"
+    fi
+    XCFRAMEWORK_OUTPUT="${XCFRAMEWORKS_DIR}/${XCFRAMEWORK_NAME}.xcframework"
     
     echo "  Creating XCFramework..."
     xcodebuild -create-xcframework \
@@ -386,10 +392,12 @@ build_module_xcframework() {
     
     if [ -d "$XCFRAMEWORK_OUTPUT" ]; then
         # Create zip archive
-        ZIP_OUTPUT="${XCFRAMEWORK_OUTPUT}.zip"
+        # Use the same name mapping for zip file (but keep uppercase HTTP in filename for backward compatibility)
+        ZIP_NAME="${XCFRAMEWORK_NAME}.xcframework"
+        ZIP_OUTPUT="${XCFRAMEWORKS_DIR}/${ZIP_NAME}.zip"
         cd "$(dirname "$XCFRAMEWORK_OUTPUT")"
         zip -r -q "${ZIP_OUTPUT}" "$(basename "$XCFRAMEWORK_OUTPUT")"
-        echo -e "${GREEN}  ✓ Created ${MODULE_NAME}.xcframework.zip${NC}"
+        echo -e "${GREEN}  ✓ Created ${ZIP_NAME}.zip${NC}"
     fi
 }
 
