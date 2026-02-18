@@ -8,19 +8,19 @@ import PackageDescription
 // Core modules
 let openTelemetryApiXCFramework = Target.binaryTarget(
     name: "OpenTelemetryApi",
-    url: "https://github.com/open-telemetry/opentelemetry-swift/releases/download/1.15.0/OpenTelemetryApi.xcframework.zip",
+    url: "https://github.com/michaelversus/opentelemetry-swift-spm/releases/download/1.15.0/OpenTelemetryApi.xcframework.zip",
     checksum: "b9753d84bc9a7f76d2642a9ac63239c5404fef1d5639d377de5724a6c854edd1"
 )
 
 let openTelemetrySdkXCFramework = Target.binaryTarget(
     name: "OpenTelemetrySdk",
-    url: "https://github.com/open-telemetry/opentelemetry-swift/releases/download/1.15.0/OpenTelemetrySdk.xcframework.zip",
+    url: "https://github.com/michaelversus/opentelemetry-swift-spm/releases/download/1.15.0/OpenTelemetrySdk.xcframework.zip",
     checksum: "7eb41880ec343a5e8595efe6da5b788f8f6d4e1d4c55571a0081124f57fc8a8e"
 )
 
 let openTelemetryProtocolExporterHttpXCFramework = Target.binaryTarget(
     name: "OpenTelemetryProtocolExporterHttp",
-    url: "https://github.com/open-telemetry/opentelemetry-swift/releases/download/1.15.0/OpenTelemetryProtocolExporterHTTP.xcframework.zip",
+    url: "https://github.com/michaelversus/opentelemetry-swift-spm/releases/download/1.15.0/OpenTelemetryProtocolExporterHTTP.xcframework.zip",
     checksum: "97355327d48f1ff56a0daf17c66e08194875a0c0eb0ff02b71eea72390ae58d7"
 )
 
