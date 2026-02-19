@@ -227,19 +227,89 @@ create_framework_from_build() {
         return 1
     fi
     
-    FIRST_FILE=$(echo "$OBJECT_FILES" | head -1)
     OBJECT_COUNT=$(echo "$OBJECT_FILES" | wc -l | xargs)
     
-    echo "      Creating static library from ${OBJECT_COUNT} object files..."
-    
-    # Create archive with first file
-    ar rcs "$OUTPUT" "$FIRST_FILE"
-    
-    # Add remaining files in batches to avoid command line length limits
-    echo "$OBJECT_FILES" | tail -n +2 | xargs -n 50 ar r "$OUTPUT" 2>/dev/null
-    
-    # Index the archive
-    ranlib "$OUTPUT"
+    # For iOS Simulator, we need to create a universal binary with both arm64 and x86_64
+    if [ "$PLATFORM" = "ios-simulator" ]; then
+        echo "      Creating universal static library for iOS Simulator (arm64 + x86_64) from ${OBJECT_COUNT} object files..."
+        
+        # First, try to find architecture-specific subdirectories (most common case)
+        ARM64_DIR="${INTERMEDIATE_BUILD}/Objects-normal/arm64"
+        X86_64_DIR="${INTERMEDIATE_BUILD}/Objects-normal/x86_64"
+        
+        if [ -d "$ARM64_DIR" ] && [ -d "$X86_64_DIR" ]; then
+            # We have separate architecture directories - use them
+            ARM64_OBJECTS=$(find "$ARM64_DIR" -name "*.o" -type f 2>/dev/null)
+            X86_64_OBJECTS=$(find "$X86_64_DIR" -name "*.o" -type f 2>/dev/null)
+            
+            if [ -n "$ARM64_OBJECTS" ] && [ -n "$X86_64_OBJECTS" ]; then
+                echo "      Found separate architecture directories (arm64: $(echo "$ARM64_OBJECTS" | wc -l | xargs), x86_64: $(echo "$X86_64_OBJECTS" | wc -l | xargs))"
+            fi
+        fi
+        
+        # If we didn't find separate directories, try to identify architectures from file command
+        if [ -z "$ARM64_OBJECTS" ] || [ -z "$X86_64_OBJECTS" ]; then
+            # Try using file command to identify architectures
+            # Use a temporary file to avoid subshell issues
+            ARM64_TEMP=$(mktemp)
+            X86_64_TEMP=$(mktemp)
+            
+            for obj in $OBJECT_FILES; do
+                ARCH_INFO=$(file "$obj" 2>/dev/null || echo "")
+                if echo "$ARCH_INFO" | grep -qi "arm64"; then
+                    echo "$obj" >> "$ARM64_TEMP"
+                elif echo "$ARCH_INFO" | grep -qi "x86_64\|i386"; then
+                    echo "$obj" >> "$X86_64_TEMP"
+                fi
+            done
+            
+            if [ -s "$ARM64_TEMP" ]; then
+                ARM64_OBJECTS=$(cat "$ARM64_TEMP")
+            fi
+            if [ -s "$X86_64_TEMP" ]; then
+                X86_64_OBJECTS=$(cat "$X86_64_TEMP")
+            fi
+            
+            rm -f "$ARM64_TEMP" "$X86_64_TEMP"
+        fi
+        
+        # Create separate static libraries for each architecture if we found both
+        if [ -n "$ARM64_OBJECTS" ] && [ -n "$X86_64_OBJECTS" ]; then
+            ARM64_LIB="${OUTPUT}.arm64"
+            X86_64_LIB="${OUTPUT}.x86_64"
+            
+            # Create arm64 library
+            FIRST_ARM64=$(echo "$ARM64_OBJECTS" | head -1)
+            ar rcs "$ARM64_LIB" "$FIRST_ARM64"
+            echo "$ARM64_OBJECTS" | tail -n +2 | xargs -n 50 ar r "$ARM64_LIB" 2>/dev/null
+            ranlib "$ARM64_LIB"
+            
+            # Create x86_64 library
+            FIRST_X86_64=$(echo "$X86_64_OBJECTS" | head -1)
+            ar rcs "$X86_64_LIB" "$FIRST_X86_64"
+            echo "$X86_64_OBJECTS" | tail -n +2 | xargs -n 50 ar r "$X86_64_LIB" 2>/dev/null
+            ranlib "$X86_64_LIB"
+            
+            # Combine into universal binary
+            lipo -create "$ARM64_LIB" "$X86_64_LIB" -output "$OUTPUT"
+            rm -f "$ARM64_LIB" "$X86_64_LIB"
+            echo "      ✓ Created universal binary (arm64 + x86_64)"
+        else
+            # Fallback: create single library
+            echo "      Warning: Could not separate architectures, creating single library..."
+            FIRST_FILE=$(echo "$OBJECT_FILES" | head -1)
+            ar rcs "$OUTPUT" "$FIRST_FILE"
+            echo "$OBJECT_FILES" | tail -n +2 | xargs -n 50 ar r "$OUTPUT" 2>/dev/null
+            ranlib "$OUTPUT"
+        fi
+    else
+        # For device builds, create single architecture library
+        echo "      Creating static library from ${OBJECT_COUNT} object files..."
+        FIRST_FILE=$(echo "$OBJECT_FILES" | head -1)
+        ar rcs "$OUTPUT" "$FIRST_FILE"
+        echo "$OBJECT_FILES" | tail -n +2 | xargs -n 50 ar r "$OUTPUT" 2>/dev/null
+        ranlib "$OUTPUT"
+    fi
     
     # Create Info.plist (use framework name, not module name)
     cat > "$FRAMEWORK_DIR/Info.plist" <<EOF
@@ -353,8 +423,8 @@ build_module_xcframework() {
         echo "    ✗ iOS device framework creation failed"
     fi
     
-    # Build for iOS Simulator
-    echo "  Building for iOS Simulator..."
+    # Build for iOS Simulator (both arm64 and x86_64 for universal binary)
+    echo "  Building for iOS Simulator (arm64 + x86_64)..."
     # Ensure we're still in source directory
     cd "${SOURCE_DIR}"
     # Map module name to scheme name (scheme names may differ from module names)
@@ -367,6 +437,8 @@ build_module_xcframework() {
     if [ "${MODULE_NAME}" = "OpenTelemetryProtocolExporterHTTP" ]; then
         MODULE_NAME_ARG="PRODUCT_MODULE_NAME=OpenTelemetryProtocolExporterHttp"
     fi
+    # Build for iOS Simulator with both architectures explicitly
+    # Use ARCHS to ensure both arm64 and x86_64 are built
     xcodebuild archive \
         ${WORKSPACE_ARG} \
         -scheme "${SCHEME_NAME}" \
@@ -375,6 +447,8 @@ build_module_xcframework() {
         SKIP_INSTALL=NO \
         BUILD_LIBRARY_FOR_DISTRIBUTION=YES \
         ONLY_ACTIVE_ARCH=NO \
+        ARCHS="arm64 x86_64" \
+        VALID_ARCHS="arm64 x86_64" \
         CODE_SIGN_IDENTITY="" \
         CODE_SIGNING_REQUIRED=NO \
         SWIFT_STRICT_CONCURRENCY=no \
