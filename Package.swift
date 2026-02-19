@@ -49,10 +49,13 @@ let package = Package(
     ],
     products: [
         .library(name: "OpenTelemetryApi", targets: ["OpenTelemetryApi", "_OpenTelemetrySwiftStub"]),
-        .library(name: "OpenTelemetrySdk", targets: ["OpenTelemetrySdk", "_OpenTelemetrySwiftStub"]),
+        // OpenTelemetrySdk depends on OpenTelemetryApi, so include it in the product targets
+        .library(name: "OpenTelemetrySdk", targets: ["OpenTelemetrySdk", "OpenTelemetryApi", "_OpenTelemetrySwiftStub"]),
         .library(name: "DataCompression", targets: ["DataCompression", "_OpenTelemetrySwiftStub"]),
-        .library(name: "OpenTelemetryProtocolExporterCommon", targets: ["OpenTelemetryProtocolExporterCommon", "_OpenTelemetrySwiftStub"]),
-        .library(name: "OpenTelemetryProtocolExporterHttp", targets: ["OpenTelemetryProtocolExporterHttpWrapper", "_OpenTelemetrySwiftStub"]),
+        // OpenTelemetryProtocolExporterCommon depends on OpenTelemetrySdk and OpenTelemetryApi
+        .library(name: "OpenTelemetryProtocolExporterCommon", targets: ["OpenTelemetryProtocolExporterCommon", "OpenTelemetrySdk", "OpenTelemetryApi", "_OpenTelemetrySwiftStub"]),
+        // OpenTelemetryProtocolExporterHttp depends on OpenTelemetryProtocolExporterCommon, OpenTelemetrySdk, and OpenTelemetryApi
+        .library(name: "OpenTelemetryProtocolExporterHttp", targets: ["OpenTelemetryProtocolExporterHttpWrapper", "OpenTelemetryProtocolExporterCommon", "OpenTelemetrySdk", "OpenTelemetryApi", "_OpenTelemetrySwiftStub"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-protobuf.git", "1.33.3"..<"1.34.0"),
