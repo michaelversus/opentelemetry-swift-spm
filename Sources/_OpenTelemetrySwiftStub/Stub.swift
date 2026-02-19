@@ -14,6 +14,7 @@ import Foundation
 @_exported import DataCompression
 @_exported import OpenTelemetryProtocolExporterCommon
 @_exported import OpenTelemetryProtocolExporterHttp
+@_exported import SwiftProtobuf
 
 // Empty stub - the actual implementation comes from the binary XCFramework
 // The imports above ensure the static libraries are linked

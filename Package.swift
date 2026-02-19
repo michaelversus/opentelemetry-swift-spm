@@ -88,6 +88,8 @@ let package = Package(
         //
         // Additionally, by depending on all binary targets, we ensure the static libraries
         // are linked when this package is used through transitive dependencies.
+        // SwiftProtobuf is included here because the OpenTelemetryProtocolExporterHttp binary
+        // target's .swiftinterface file imports it, and it must be available when building.
         .target(
             name: "_OpenTelemetrySwiftStub",
             dependencies: [
@@ -95,7 +97,8 @@ let package = Package(
                 "OpenTelemetrySdk",
                 "DataCompression",
                 "OpenTelemetryProtocolExporterCommon",
-                "OpenTelemetryProtocolExporterHttp"
+                "OpenTelemetryProtocolExporterHttp",
+                .product(name: "SwiftProtobuf", package: "swift-protobuf")
             ]
         ),
     ]
