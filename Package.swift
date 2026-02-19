@@ -85,6 +85,18 @@ let package = Package(
         // ran on a physical device. As a workaround, we can include a stub target
         // with at least one source file.
         // https://github.com/apple/swift-package-manager/issues/6069
-        .target(name: "_OpenTelemetrySwiftStub"),
+        //
+        // Additionally, by depending on all binary targets, we ensure the static libraries
+        // are linked when this package is used through transitive dependencies.
+        .target(
+            name: "_OpenTelemetrySwiftStub",
+            dependencies: [
+                "OpenTelemetryApi",
+                "OpenTelemetrySdk",
+                "DataCompression",
+                "OpenTelemetryProtocolExporterCommon",
+                "OpenTelemetryProtocolExporterHttp"
+            ]
+        ),
     ]
 )
